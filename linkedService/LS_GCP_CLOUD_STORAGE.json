@@ -1,0 +1,40 @@
+{
+	"name": "LS_GCP_CLOUD_STORAGE",
+	"type": "Microsoft.DataFactory/factories/linkedservices",
+	"properties": {
+		"parameters": {
+			"lsGcpAccessKeyId": {
+				"type": "string"
+			},
+			"lsGcpSecretAccessKeySecretName": {
+				"type": "string"
+			},
+			"lsAkvUrl": {
+				"type": "string"
+			}
+		},
+		"annotations": [],
+		"type": "GoogleCloudStorage",
+		"typeProperties": {
+			"serviceUrl": "https://storage.googleapis.com",
+			"accessKeyId": "@{linkedService().lsGcpAccessKeyId}",
+			"secretAccessKey": {
+				"type": "AzureKeyVaultSecret",
+				"store": {
+					"referenceName": "LS_AKV",
+					"type": "LinkedServiceReference",
+					"parameters": {
+						"lsAkvUrl": {
+							"value": "@linkedService().lsAkvUrl",
+							"type": "Expression"
+						}
+					}
+				},
+				"secretName": {
+					"value": "@linkedService().lsGcpSecretAccessKeySecretName",
+					"type": "Expression"
+				}
+			}
+		}
+	}
+}

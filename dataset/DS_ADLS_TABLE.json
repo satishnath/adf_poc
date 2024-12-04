@@ -1,0 +1,28 @@
+{
+	"name": "DS_ADLS_TABLE",
+	"properties": {
+		"linkedServiceName": {
+			"referenceName": "LS_ADLS_TABLE",
+			"type": "LinkedServiceReference"
+		},
+		"parameters": {
+			"TableName": {
+				"type": "string",
+				"defaultValue": "Metadata"
+			}
+		},
+		"folder": {
+			"name": "Components"
+		},
+		"annotations": [],
+		"type": "AzureTable",
+		"schema": [],
+		"typeProperties": {
+			"tableName": {
+				"value": "@dataset().TableName",
+				"type": "Expression"
+			}
+		}
+	},
+	"type": "Microsoft.DataFactory/factories/datasets"
+}

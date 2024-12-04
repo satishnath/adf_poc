@@ -1,0 +1,59 @@
+{
+	"name": "DS_GCP_BUCKET_FOLDER",
+	"properties": {
+		"linkedServiceName": {
+			"referenceName": "LS_GCP_CLOUD_STORAGE",
+			"type": "LinkedServiceReference",
+			"parameters": {
+				"lsGcpAccessKeyId": {
+					"value": "@dataset().lsGcpAccessKeyId",
+					"type": "Expression"
+				},
+				"lsGcpSecretAccessKeySecretName": {
+					"value": "@dataset().lsGcpSecretAccessKeySecretName",
+					"type": "Expression"
+				},
+				"lsAkvUrl": {
+					"value": "@dataset().lsAkvUrl",
+					"type": "Expression"
+				}
+			}
+		},
+		"parameters": {
+			"dsBucketName": {
+				"type": "string"
+			},
+			"dsDirectoryPath": {
+				"type": "string"
+			},
+			"lsGcpAccessKeyId": {
+				"type": "string"
+			},
+			"lsGcpSecretAccessKeySecretName": {
+				"type": "string"
+			},
+			"lsAkvUrl": {
+				"type": "string"
+			}
+		},
+		"folder": {
+			"name": "Components"
+		},
+		"annotations": [],
+		"type": "Binary",
+		"typeProperties": {
+			"location": {
+				"type": "GoogleCloudStorageLocation",
+				"bucketName": {
+					"value": "@dataset().dsBucketName",
+					"type": "Expression"
+				},
+				"folderPath": {
+					"value": "@dataset().dsDirectoryPath",
+					"type": "Expression"
+				}
+			}
+		}
+	},
+	"type": "Microsoft.DataFactory/factories/datasets"
+}

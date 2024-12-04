@@ -1,0 +1,25 @@
+{
+	"name": "atium-sandbox-adf",
+	"properties": {
+		"globalParameters": {
+			"lsAkvUrl": {
+				"type": "string",
+				"value": "PLACEHOLDER"
+			},
+			"lsAdlsUrl": {
+				"type": "string",
+				"value": "PLACEHOLDER"
+			},
+			"lsAdlsAccountKeySecretName": {
+				"type": "string",
+				"value": "PLACEHOLDER"
+			}
+		}
+	},
+	"location": "northeurope",
+	"identity": {
+		"type": "SystemAssigned",
+		"principalId": "29da8695-4ea6-44a7-bf21-2d4c40ee24e2",
+		"tenantId": "45324217-1406-451e-b0ce-800c561d811a"
+	}
+}

@@ -1,0 +1,111 @@
+{
+	"name": "OPL_FETCH_DATA",
+	"properties": {
+		"activities": [
+			{
+				"name": "Fetch Metadata",
+				"type": "Lookup",
+				"dependsOn": [],
+				"policy": {
+					"timeout": "0.12:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"source": {
+						"type": "AzureTableSource",
+						"azureTableSourceIgnoreTableNotFound": false
+					},
+					"dataset": {
+						"referenceName": "DS_ADLS_TABLE",
+						"type": "DatasetReference",
+						"parameters": {
+							"TableName": "Metadata"
+						}
+					},
+					"firstRowOnly": false
+				}
+			},
+			{
+				"name": "For Each Metadata Record",
+				"type": "ForEach",
+				"dependsOn": [
+					{
+						"activity": "Fetch Metadata",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"userProperties": [],
+				"typeProperties": {
+					"items": {
+						"value": "@activity('Fetch Metadata').output.value",
+						"type": "Expression"
+					},
+					"activities": [
+						{
+							"name": "Execute Copy Pipeline",
+							"type": "ExecutePipeline",
+							"dependsOn": [],
+							"policy": {
+								"secureInput": false
+							},
+							"userProperties": [],
+							"typeProperties": {
+								"pipeline": {
+									"referenceName": "WPL_COPY_GCP_BUCKET_FILE",
+									"type": "PipelineReference"
+								},
+								"waitOnCompletion": true,
+								"parameters": {
+									"SourceBucketName": {
+										"value": "@item().SourceBucketName",
+										"type": "Expression"
+									},
+									"TargetContainerName": {
+										"value": "@item().TargetContainerName",
+										"type": "Expression"
+									},
+									"SourceDirectoryPath": {
+										"value": "@item().SourceDirectoryPath",
+										"type": "Expression"
+									},
+									"TargetDirectoryPath": {
+										"value": "@item().TargetDirectoryPath",
+										"type": "Expression"
+									},
+									"SourceFilePath": {
+										"value": "@item().SourceFilePath",
+										"type": "Expression"
+									},
+									"TargetFilePath": {
+										"value": "@item().TargetFilePath",
+										"type": "Expression"
+									},
+									"GcpAccessKeyId": {
+										"value": "@item().GcpAccessKeyId",
+										"type": "Expression"
+									},
+									"GcpSecretAccessKeySecretName": {
+										"value": "@item().GcpSecretAccessKeySecretName",
+										"type": "Expression"
+									}
+								}
+							}
+						}
+					]
+				}
+			}
+		],
+		"folder": {
+			"name": "Components"
+		},
+		"annotations": [],
+		"lastPublishTime": "2024-12-04T19:35:54Z"
+	},
+	"type": "Microsoft.DataFactory/factories/pipelines"
+}

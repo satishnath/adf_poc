@@ -1,0 +1,66 @@
+{
+	"name": "DS_ADLS_FILE",
+	"properties": {
+		"linkedServiceName": {
+			"referenceName": "LS_ADLS",
+			"type": "LinkedServiceReference",
+			"parameters": {
+				"lsAdlsUrl": {
+					"value": "@dataset().lsAdlsUrl",
+					"type": "Expression"
+				},
+				"lsAdlsAccountKeySecretName": {
+					"value": "@dataset().lsAdlsAccountKeySecretName",
+					"type": "Expression"
+				},
+				"lsAkvUrl": {
+					"value": "@dataset().lsAkvUrl",
+					"type": "Expression"
+				}
+			}
+		},
+		"parameters": {
+			"dsContainerName": {
+				"type": "string"
+			},
+			"dsDirectoryPath": {
+				"type": "string"
+			},
+			"dsFilePath": {
+				"type": "string"
+			},
+			"lsAdlsUrl": {
+				"type": "string"
+			},
+			"lsAdlsAccountKeySecretName": {
+				"type": "string"
+			},
+			"lsAkvUrl": {
+				"type": "string"
+			}
+		},
+		"folder": {
+			"name": "Components"
+		},
+		"annotations": [],
+		"type": "Binary",
+		"typeProperties": {
+			"location": {
+				"type": "AzureBlobFSLocation",
+				"fileName": {
+					"value": "@dataset().dsFilePath",
+					"type": "Expression"
+				},
+				"folderPath": {
+					"value": "@dataset().dsDirectoryPath",
+					"type": "Expression"
+				},
+				"fileSystem": {
+					"value": "@dataset().dsContainerName",
+					"type": "Expression"
+				}
+			}
+		}
+	},
+	"type": "Microsoft.DataFactory/factories/datasets"
+}

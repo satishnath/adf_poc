@@ -1,0 +1,39 @@
+{
+	"name": "LS_ADLS",
+	"type": "Microsoft.DataFactory/factories/linkedservices",
+	"properties": {
+		"parameters": {
+			"lsAdlsUrl": {
+				"type": "string"
+			},
+			"lsAdlsAccountKeySecretName": {
+				"type": "string"
+			},
+			"lsAkvUrl": {
+				"type": "string"
+			}
+		},
+		"annotations": [],
+		"type": "AzureBlobFS",
+		"typeProperties": {
+			"url": "@{linkedService().lsAdlsUrl}",
+			"accountKey": {
+				"type": "AzureKeyVaultSecret",
+				"store": {
+					"referenceName": "LS_AKV",
+					"type": "LinkedServiceReference",
+					"parameters": {
+						"lsAkvUrl": {
+							"value": "@linkedService().lsAkvUrl",
+							"type": "Expression"
+						}
+					}
+				},
+				"secretName": {
+					"value": "@linkedService().lsAdlsAccountKeySecretName",
+					"type": "Expression"
+				}
+			}
+		}
+	}
+}

@@ -1,0 +1,130 @@
+{
+	"name": "WPL_COPY_ADLS_FILE",
+	"properties": {
+		"activities": [
+			{
+				"name": "Copy File",
+				"type": "Copy",
+				"dependsOn": [],
+				"policy": {
+					"timeout": "0.12:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"source": {
+						"type": "BinarySource",
+						"storeSettings": {
+							"type": "AzureBlobFSReadSettings",
+							"recursive": false,
+							"deleteFilesAfterCompletion": false
+						},
+						"formatSettings": {
+							"type": "BinaryReadSettings"
+						}
+					},
+					"sink": {
+						"type": "BinarySink",
+						"storeSettings": {
+							"type": "AzureBlobFSWriteSettings"
+						}
+					},
+					"enableStaging": false
+				},
+				"inputs": [
+					{
+						"referenceName": "DS_ADLS_FILE",
+						"type": "DatasetReference",
+						"parameters": {
+							"dsContainerName": {
+								"value": "@pipeline().parameters.SourceContainerName",
+								"type": "Expression"
+							},
+							"dsDirectoryPath": {
+								"value": "@pipeline().parameters.SourceDirectoryPath",
+								"type": "Expression"
+							},
+							"dsFilePath": {
+								"value": "@pipeline().parameters.SourceFilePath",
+								"type": "Expression"
+							},
+							"lsAdlsUrl": {
+								"value": "@pipeline().globalParameters.lsAdlsUrl",
+								"type": "Expression"
+							},
+							"lsAdlsAccountKeySecretName": {
+								"value": "@pipeline().globalParameters.lsAdlsAccountKeySecretName",
+								"type": "Expression"
+							},
+							"lsAkvUrl": {
+								"value": "@pipeline().globalParameters.lsAkvUrl",
+								"type": "Expression"
+							}
+						}
+					}
+				],
+				"outputs": [
+					{
+						"referenceName": "DS_ADLS_FILE",
+						"type": "DatasetReference",
+						"parameters": {
+							"dsContainerName": {
+								"value": "@pipeline().parameters.TargetContainerName",
+								"type": "Expression"
+							},
+							"dsDirectoryPath": {
+								"value": "@pipeline().parameters.TargetDirectoryPath",
+								"type": "Expression"
+							},
+							"dsFilePath": {
+								"value": "@pipeline().parameters.TargetFilePath",
+								"type": "Expression"
+							},
+							"lsAdlsUrl": {
+								"value": "@pipeline().globalParameters.lsAdlsUrl",
+								"type": "Expression"
+							},
+							"lsAdlsAccountKeySecretName": {
+								"value": "@pipeline().globalParameters.lsAdlsAccountKeySecretName",
+								"type": "Expression"
+							},
+							"lsAkvUrl": {
+								"value": "@pipeline().globalParameters.lsAkvUrl",
+								"type": "Expression"
+							}
+						}
+					}
+				]
+			}
+		],
+		"parameters": {
+			"SourceContainerName": {
+				"type": "string"
+			},
+			"TargetContainerName": {
+				"type": "string"
+			},
+			"SourceDirectoryPath": {
+				"type": "string"
+			},
+			"TargetDirectoryPath": {
+				"type": "string"
+			},
+			"SourceFilePath": {
+				"type": "string"
+			},
+			"TargetFilePath": {
+				"type": "string"
+			}
+		},
+		"folder": {
+			"name": "Components"
+		},
+		"annotations": [],
+		"lastPublishTime": "2024-12-03T20:26:56Z"
+	},
+	"type": "Microsoft.DataFactory/factories/pipelines"
+}
