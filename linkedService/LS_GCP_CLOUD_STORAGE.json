@@ -2,6 +2,7 @@
 	"name": "LS_GCP_CLOUD_STORAGE",
 	"type": "Microsoft.DataFactory/factories/linkedservices",
 	"properties": {
+		"type": "GoogleCloudStorage",
 		"parameters": {
 			"lsGcpAccessKeyId": {
 				"type": "string"
@@ -14,7 +15,6 @@
 			}
 		},
 		"annotations": [],
-		"type": "GoogleCloudStorage",
 		"typeProperties": {
 			"serviceUrl": "https://storage.googleapis.com",
 			"accessKeyId": "@{linkedService().lsGcpAccessKeyId}",

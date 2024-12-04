@@ -20,14 +20,6 @@
 						"storeSettings": {
 							"type": "GoogleCloudStorageReadSettings",
 							"recursive": true,
-							"wildcardFolderPath": {
-								"value": "@pipeline().parameters.SourceDirectoryPath",
-								"type": "Expression"
-							},
-							"wildcardFileName": {
-								"value": "@pipeline().parameters.SourceFilePath",
-								"type": "Expression"
-							},
 							"deleteFilesAfterCompletion": false
 						},
 						"formatSettings": {
@@ -138,7 +130,7 @@
 			"name": "Components"
 		},
 		"annotations": [],
-		"lastPublishTime": "2024-12-03T20:26:56Z"
+		"lastPublishTime": "2024-12-04T18:16:03Z"
 	},
 	"type": "Microsoft.DataFactory/factories/pipelines"
 }

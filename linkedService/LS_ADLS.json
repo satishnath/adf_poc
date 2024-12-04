@@ -21,13 +21,7 @@
 				"type": "AzureKeyVaultSecret",
 				"store": {
 					"referenceName": "LS_AKV",
-					"type": "LinkedServiceReference",
-					"parameters": {
-						"lsAkvUrl": {
-							"value": "@linkedService().lsAkvUrl",
-							"type": "Expression"
-						}
-					}
+					"type": "LinkedServiceReference"
 				},
 				"secretName": {
 					"value": "@linkedService().lsAdlsAccountKeySecretName",
