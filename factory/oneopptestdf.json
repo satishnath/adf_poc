@@ -1,0 +1,9 @@
+{
+	"name": "oneopptestdf",
+	"location": "eastus",
+	"identity": {
+		"type": "SystemAssigned",
+		"principalId": "ae9c8c5d-d15b-411f-b50b-c1171b94ac86",
+		"tenantId": "d4589c94-9b85-4677-a5a5-7afd81130094"
+	}
+}
