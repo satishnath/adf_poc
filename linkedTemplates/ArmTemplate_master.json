@@ -1,0 +1,70 @@
+{
+    "$schema": "http://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+        "factoryName": {
+            "type": "string",
+            "metadata": "Data Factory name",
+            "defaultValue": "atium-sandbox-adf"
+        },
+        "LS_ADLS_TABLE_connectionString": {
+            "type": "secureString",
+            "metadata": "Secure string for 'connectionString' of 'LS_ADLS_TABLE'"
+        },
+        "LS_ADLS_properties_typeProperties_url": {
+            "type": "string",
+            "defaultValue": "@{linkedService().lsAdlsUrl}"
+        },
+        "LS_AKV_properties_typeProperties_baseUrl": {
+            "type": "string",
+            "defaultValue": "@{linkedService().lsAkvUrl}"
+        },
+        "LS_GCP_CLOUD_STORAGE_properties_typeProperties_accessKeyId": {
+            "type": "string",
+            "defaultValue": "@{linkedService().lsGcpAccessKeyId}"
+        },
+        "containerUri": {
+            "type": "string",
+            "metadata": "URI to storage account containing linked ARM templates"
+        },
+        "containerSasToken": {
+            "type": "string",
+            "metadata": "Sas token to storage account containing linked ARM templates"
+        }
+    },
+    "variables": {
+        "factoryId": "[concat('Microsoft.DataFactory/factories/', parameters('factoryName'))]"
+    },
+    "resources": [
+        {
+            "name": "atium-sandbox-adf_ArmTemplate_0",
+            "type": "Microsoft.Resources/deployments",
+            "apiVersion": "2024-03-01",
+            "properties": {
+                "mode": "incremental",
+                "templateLink": {
+                    "uri": "[concat(parameters('containerUri'), '/ArmTemplate_0.json', parameters('containerSasToken'))]",
+                    "contentVersion": "1.0.0.0"
+                },
+                "parameters": {
+                    "factoryName": {
+                        "value": "[parameters('factoryName')]"
+                    },
+                    "LS_ADLS_TABLE_connectionString": {
+                        "value": "[parameters('LS_ADLS_TABLE_connectionString')]"
+                    },
+                    "LS_AKV_properties_typeProperties_baseUrl": {
+                        "value": "[parameters('LS_AKV_properties_typeProperties_baseUrl')]"
+                    },
+                    "LS_ADLS_properties_typeProperties_url": {
+                        "value": "[parameters('LS_ADLS_properties_typeProperties_url')]"
+                    },
+                    "LS_GCP_CLOUD_STORAGE_properties_typeProperties_accessKeyId": {
+                        "value": "[parameters('LS_GCP_CLOUD_STORAGE_properties_typeProperties_accessKeyId')]"
+                    }
+                }
+            },
+            "dependsOn": []
+        }
+    ]
+}

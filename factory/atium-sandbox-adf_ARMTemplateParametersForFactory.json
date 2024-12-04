@@ -1,0 +1,24 @@
+{
+    "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentParameters.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+        "factoryName": {
+            "value": "atium-sandbox-adf"
+        },
+        "dataFactory_properties_globalParameters_lsAkvUrl_value": {
+            "value": "PLACEHOLDER"
+        },
+        "dataFactory_properties_globalParameters_lsAdlsUrl_value": {
+            "value": "PLACEHOLDER"
+        },
+        "dataFactory_properties_globalParameters_lsAdlsAccountKeySecretName_value": {
+            "value": "PLACEHOLDER"
+        },
+        "dataFactory_location": {
+            "value": "northeurope"
+        },
+        "dataFactory_identity_type": {
+            "value": "SystemAssigned"
+        }
+    }
+}

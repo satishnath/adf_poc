@@ -1,0 +1,842 @@
+{
+    "$schema": "http://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+        "factoryName": {
+            "type": "string",
+            "metadata": "Data Factory name",
+            "defaultValue": "atium-sandbox-adf"
+        },
+        "LS_ADLS_TABLE_connectionString": {
+            "type": "secureString",
+            "metadata": "Secure string for 'connectionString' of 'LS_ADLS_TABLE'"
+        },
+        "LS_ADLS_properties_typeProperties_url": {
+            "type": "string",
+            "defaultValue": "@{linkedService().lsAdlsUrl}"
+        },
+        "LS_AKV_properties_typeProperties_baseUrl": {
+            "type": "string",
+            "defaultValue": "@{linkedService().lsAkvUrl}"
+        },
+        "LS_GCP_CLOUD_STORAGE_properties_typeProperties_accessKeyId": {
+            "type": "string",
+            "defaultValue": "@{linkedService().lsGcpAccessKeyId}"
+        }
+    },
+    "variables": {
+        "factoryId": "[concat('Microsoft.DataFactory/factories/', parameters('factoryName'))]"
+    },
+    "resources": [
+        {
+            "name": "[concat(parameters('factoryName'), '/LS_ADLS')]",
+            "type": "Microsoft.DataFactory/factories/linkedServices",
+            "apiVersion": "2018-06-01",
+            "properties": {
+                "parameters": {
+                    "lsAdlsUrl": {
+                        "type": "string"
+                    },
+                    "lsAdlsAccountKeySecretName": {
+                        "type": "string"
+                    },
+                    "lsAkvUrl": {
+                        "type": "string"
+                    }
+                },
+                "annotations": [],
+                "type": "AzureBlobFS",
+                "typeProperties": {
+                    "url": "[parameters('LS_ADLS_properties_typeProperties_url')]",
+                    "accountKey": {
+                        "type": "AzureKeyVaultSecret",
+                        "store": {
+                            "referenceName": "LS_AKV",
+                            "type": "LinkedServiceReference",
+                            "parameters": {}
+                        },
+                        "secretName": {
+                            "value": "@linkedService().lsAdlsAccountKeySecretName",
+                            "type": "Expression"
+                        }
+                    }
+                }
+            },
+            "dependsOn": [
+                "[concat(variables('factoryId'), '/linkedServices/LS_AKV')]"
+            ]
+        },
+        {
+            "name": "[concat(parameters('factoryName'), '/LS_ADLS_TABLE')]",
+            "type": "Microsoft.DataFactory/factories/linkedServices",
+            "apiVersion": "2018-06-01",
+            "properties": {
+                "annotations": [],
+                "type": "AzureTableStorage",
+                "typeProperties": {
+                    "connectionString": "[parameters('LS_ADLS_TABLE_connectionString')]"
+                }
+            },
+            "dependsOn": []
+        },
+        {
+            "name": "[concat(parameters('factoryName'), '/DS_ADLS_FILE')]",
+            "type": "Microsoft.DataFactory/factories/datasets",
+            "apiVersion": "2018-06-01",
+            "properties": {
+                "linkedServiceName": {
+                    "referenceName": "LS_ADLS",
+                    "type": "LinkedServiceReference",
+                    "parameters": {
+                        "lsAdlsUrl": {
+                            "value": "@dataset().lsAdlsUrl",
+                            "type": "Expression"
+                        },
+                        "lsAdlsAccountKeySecretName": {
+                            "value": "@dataset().lsAdlsAccountKeySecretName",
+                            "type": "Expression"
+                        },
+                        "lsAkvUrl": {
+                            "value": "@dataset().lsAkvUrl",
+                            "type": "Expression"
+                        }
+                    }
+                },
+                "parameters": {
+                    "dsContainerName": {
+                        "type": "string"
+                    },
+                    "dsDirectoryPath": {
+                        "type": "string"
+                    },
+                    "dsFilePath": {
+                        "type": "string"
+                    },
+                    "lsAdlsUrl": {
+                        "type": "string"
+                    },
+                    "lsAdlsAccountKeySecretName": {
+                        "type": "string"
+                    },
+                    "lsAkvUrl": {
+                        "type": "string"
+                    }
+                },
+                "folder": {
+                    "name": "Components"
+                },
+                "annotations": [],
+                "type": "Binary",
+                "typeProperties": {
+                    "location": {
+                        "type": "AzureBlobFSLocation",
+                        "fileName": {
+                            "value": "@dataset().dsFilePath",
+                            "type": "Expression"
+                        },
+                        "folderPath": {
+                            "value": "@dataset().dsDirectoryPath",
+                            "type": "Expression"
+                        },
+                        "fileSystem": {
+                            "value": "@dataset().dsContainerName",
+                            "type": "Expression"
+                        }
+                    }
+                }
+            },
+            "dependsOn": [
+                "[concat(variables('factoryId'), '/linkedServices/LS_ADLS')]"
+            ]
+        },
+        {
+            "name": "[concat(parameters('factoryName'), '/DS_GCP_BUCKET_FILE')]",
+            "type": "Microsoft.DataFactory/factories/datasets",
+            "apiVersion": "2018-06-01",
+            "properties": {
+                "linkedServiceName": {
+                    "referenceName": "LS_GCP_CLOUD_STORAGE",
+                    "type": "LinkedServiceReference",
+                    "parameters": {
+                        "lsGcpAccessKeyId": {
+                            "value": "@dataset().lsGcpAccessKeyId",
+                            "type": "Expression"
+                        },
+                        "lsGcpSecretAccessKeySecretName": {
+                            "value": "@dataset().lsGcpSecretAccessKeySecretName",
+                            "type": "Expression"
+                        },
+                        "lsAkvUrl": {
+                            "value": "@dataset().lsAkvUrl",
+                            "type": "Expression"
+                        }
+                    }
+                },
+                "parameters": {
+                    "dsBucketName": {
+                        "type": "string"
+                    },
+                    "dsDirectoryPath": {
+                        "type": "string"
+                    },
+                    "dsFilePath": {
+                        "type": "string"
+                    },
+                    "lsGcpAccessKeyId": {
+                        "type": "string"
+                    },
+                    "lsGcpSecretAccessKeySecretName": {
+                        "type": "string"
+                    },
+                    "lsAkvUrl": {
+                        "type": "string"
+                    }
+                },
+                "folder": {
+                    "name": "Components"
+                },
+                "annotations": [],
+                "type": "Binary",
+                "typeProperties": {
+                    "location": {
+                        "type": "GoogleCloudStorageLocation",
+                        "bucketName": {
+                            "value": "@dataset().dsBucketName",
+                            "type": "Expression"
+                        },
+                        "folderPath": {
+                            "value": "@dataset().dsDirectoryPath",
+                            "type": "Expression"
+                        },
+                        "fileName": {
+                            "value": "@dataset().dsFilePath",
+                            "type": "Expression"
+                        }
+                    }
+                }
+            },
+            "dependsOn": [
+                "[concat(variables('factoryId'), '/linkedServices/LS_GCP_CLOUD_STORAGE')]"
+            ]
+        },
+        {
+            "name": "[concat(parameters('factoryName'), '/DS_ADLS_TABLE')]",
+            "type": "Microsoft.DataFactory/factories/datasets",
+            "apiVersion": "2018-06-01",
+            "properties": {
+                "linkedServiceName": {
+                    "referenceName": "LS_ADLS_TABLE",
+                    "type": "LinkedServiceReference"
+                },
+                "parameters": {
+                    "TableName": {
+                        "type": "string",
+                        "defaultValue": "Metadata"
+                    }
+                },
+                "folder": {
+                    "name": "Components"
+                },
+                "annotations": [],
+                "type": "AzureTable",
+                "schema": [],
+                "typeProperties": {
+                    "tableName": {
+                        "value": "@dataset().TableName",
+                        "type": "Expression"
+                    }
+                }
+            },
+            "dependsOn": [
+                "[concat(variables('factoryId'), '/linkedServices/LS_ADLS_TABLE')]"
+            ]
+        },
+        {
+            "name": "[concat(parameters('factoryName'), '/WPL_COPY_ADLS_FILE')]",
+            "type": "Microsoft.DataFactory/factories/pipelines",
+            "apiVersion": "2018-06-01",
+            "properties": {
+                "activities": [
+                    {
+                        "name": "Copy File",
+                        "type": "Copy",
+                        "dependsOn": [],
+                        "policy": {
+                            "timeout": "0.12:00:00",
+                            "retry": 0,
+                            "retryIntervalInSeconds": 30,
+                            "secureOutput": false,
+                            "secureInput": false
+                        },
+                        "userProperties": [],
+                        "typeProperties": {
+                            "source": {
+                                "type": "BinarySource",
+                                "storeSettings": {
+                                    "type": "AzureBlobFSReadSettings",
+                                    "recursive": false,
+                                    "deleteFilesAfterCompletion": false
+                                },
+                                "formatSettings": {
+                                    "type": "BinaryReadSettings"
+                                }
+                            },
+                            "sink": {
+                                "type": "BinarySink",
+                                "storeSettings": {
+                                    "type": "AzureBlobFSWriteSettings"
+                                }
+                            },
+                            "enableStaging": false
+                        },
+                        "inputs": [
+                            {
+                                "referenceName": "DS_ADLS_FILE",
+                                "type": "DatasetReference",
+                                "parameters": {
+                                    "dsContainerName": {
+                                        "value": "@pipeline().parameters.SourceContainerName",
+                                        "type": "Expression"
+                                    },
+                                    "dsDirectoryPath": {
+                                        "value": "@pipeline().parameters.SourceDirectoryPath",
+                                        "type": "Expression"
+                                    },
+                                    "dsFilePath": {
+                                        "value": "@pipeline().parameters.SourceFilePath",
+                                        "type": "Expression"
+                                    },
+                                    "lsAdlsUrl": {
+                                        "value": "@pipeline().globalParameters.lsAdlsUrl",
+                                        "type": "Expression"
+                                    },
+                                    "lsAdlsAccountKeySecretName": {
+                                        "value": "@pipeline().globalParameters.lsAdlsAccountKeySecretName",
+                                        "type": "Expression"
+                                    },
+                                    "lsAkvUrl": {
+                                        "value": "@pipeline().globalParameters.lsAkvUrl",
+                                        "type": "Expression"
+                                    }
+                                }
+                            }
+                        ],
+                        "outputs": [
+                            {
+                                "referenceName": "DS_ADLS_FILE",
+                                "type": "DatasetReference",
+                                "parameters": {
+                                    "dsContainerName": {
+                                        "value": "@pipeline().parameters.TargetContainerName",
+                                        "type": "Expression"
+                                    },
+                                    "dsDirectoryPath": {
+                                        "value": "@pipeline().parameters.TargetDirectoryPath",
+                                        "type": "Expression"
+                                    },
+                                    "dsFilePath": {
+                                        "value": "@pipeline().parameters.TargetFilePath",
+                                        "type": "Expression"
+                                    },
+                                    "lsAdlsUrl": {
+                                        "value": "@pipeline().globalParameters.lsAdlsUrl",
+                                        "type": "Expression"
+                                    },
+                                    "lsAdlsAccountKeySecretName": {
+                                        "value": "@pipeline().globalParameters.lsAdlsAccountKeySecretName",
+                                        "type": "Expression"
+                                    },
+                                    "lsAkvUrl": {
+                                        "value": "@pipeline().globalParameters.lsAkvUrl",
+                                        "type": "Expression"
+                                    }
+                                }
+                            }
+                        ]
+                    }
+                ],
+                "policy": {
+                    "elapsedTimeMetric": {}
+                },
+                "parameters": {
+                    "SourceContainerName": {
+                        "type": "string"
+                    },
+                    "TargetContainerName": {
+                        "type": "string"
+                    },
+                    "SourceDirectoryPath": {
+                        "type": "string"
+                    },
+                    "TargetDirectoryPath": {
+                        "type": "string"
+                    },
+                    "SourceFilePath": {
+                        "type": "string"
+                    },
+                    "TargetFilePath": {
+                        "type": "string"
+                    }
+                },
+                "folder": {
+                    "name": "Components"
+                },
+                "annotations": [],
+                "lastPublishTime": "2024-12-01T15:39:14Z"
+            },
+            "dependsOn": [
+                "[concat(variables('factoryId'), '/datasets/DS_ADLS_FILE')]"
+            ]
+        },
+        {
+            "name": "[concat(parameters('factoryName'), '/OPL_FETCH_DATA')]",
+            "type": "Microsoft.DataFactory/factories/pipelines",
+            "apiVersion": "2018-06-01",
+            "properties": {
+                "activities": [
+                    {
+                        "name": "Fetch Metadata",
+                        "type": "Lookup",
+                        "dependsOn": [],
+                        "policy": {
+                            "timeout": "0.12:00:00",
+                            "retry": 0,
+                            "retryIntervalInSeconds": 30,
+                            "secureOutput": false,
+                            "secureInput": false
+                        },
+                        "userProperties": [],
+                        "typeProperties": {
+                            "source": {
+                                "type": "AzureTableSource",
+                                "azureTableSourceIgnoreTableNotFound": false
+                            },
+                            "dataset": {
+                                "referenceName": "DS_ADLS_TABLE",
+                                "type": "DatasetReference",
+                                "parameters": {
+                                    "TableName": "Metadata"
+                                }
+                            },
+                            "firstRowOnly": false
+                        }
+                    },
+                    {
+                        "name": "For Each Metadata Record",
+                        "type": "ForEach",
+                        "dependsOn": [
+                            {
+                                "activity": "Fetch Metadata",
+                                "dependencyConditions": [
+                                    "Succeeded"
+                                ]
+                            }
+                        ],
+                        "userProperties": [],
+                        "typeProperties": {
+                            "items": {
+                                "value": "@activity('Fetch Metadata').output.value",
+                                "type": "Expression"
+                            },
+                            "activities": [
+                                {
+                                    "name": "Execute Copy Pipeline",
+                                    "type": "ExecutePipeline",
+                                    "dependsOn": [],
+                                    "policy": {
+                                        "secureInput": false
+                                    },
+                                    "userProperties": [],
+                                    "typeProperties": {
+                                        "pipeline": {
+                                            "referenceName": "WPL_COPY_ADLS_FILE",
+                                            "type": "PipelineReference"
+                                        },
+                                        "waitOnCompletion": true,
+                                        "parameters": {
+                                            "SourceContainerName": {
+                                                "value": "@item().SourceContainerName",
+                                                "type": "Expression"
+                                            },
+                                            "TargetContainerName": {
+                                                "value": "@item().TargetContainerName",
+                                                "type": "Expression"
+                                            },
+                                            "SourceDirectoryPath": {
+                                                "value": "@item().SourceDirectoryPath",
+                                                "type": "Expression"
+                                            },
+                                            "TargetDirectoryPath": {
+                                                "value": "@item().TargetDirectoryPath",
+                                                "type": "Expression"
+                                            },
+                                            "SourceFilePath": {
+                                                "value": "@item().SourceFilePath",
+                                                "type": "Expression"
+                                            },
+                                            "TargetFilePath": {
+                                                "value": "@item().TargetFilePath",
+                                                "type": "Expression"
+                                            }
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    }
+                ],
+                "policy": {
+                    "elapsedTimeMetric": {}
+                },
+                "folder": {
+                    "name": "Components"
+                },
+                "annotations": [],
+                "lastPublishTime": "2024-12-01T15:39:14Z"
+            },
+            "dependsOn": [
+                "[concat(variables('factoryId'), '/datasets/DS_ADLS_TABLE')]",
+                "[concat(variables('factoryId'), '/pipelines/WPL_COPY_ADLS_FILE')]"
+            ]
+        },
+        {
+            "name": "[concat(parameters('factoryName'), '/WPL_COPY_GCP_BUCKET_FILE')]",
+            "type": "Microsoft.DataFactory/factories/pipelines",
+            "apiVersion": "2018-06-01",
+            "properties": {
+                "activities": [
+                    {
+                        "name": "Copy File",
+                        "type": "Copy",
+                        "dependsOn": [],
+                        "policy": {
+                            "timeout": "0.12:00:00",
+                            "retry": 0,
+                            "retryIntervalInSeconds": 30,
+                            "secureOutput": false,
+                            "secureInput": false
+                        },
+                        "userProperties": [],
+                        "typeProperties": {
+                            "source": {
+                                "type": "BinarySource",
+                                "storeSettings": {
+                                    "type": "GoogleCloudStorageReadSettings",
+                                    "recursive": true,
+                                    "deleteFilesAfterCompletion": false
+                                },
+                                "formatSettings": {
+                                    "type": "BinaryReadSettings"
+                                }
+                            },
+                            "sink": {
+                                "type": "BinarySink",
+                                "storeSettings": {
+                                    "type": "AzureBlobFSWriteSettings"
+                                }
+                            },
+                            "enableStaging": false
+                        },
+                        "inputs": [
+                            {
+                                "referenceName": "DS_GCP_BUCKET_FILE",
+                                "type": "DatasetReference",
+                                "parameters": {
+                                    "dsBucketName": {
+                                        "value": "@pipeline().parameters.SourceBucketName",
+                                        "type": "Expression"
+                                    },
+                                    "dsDirectoryPath": {
+                                        "value": "@pipeline().parameters.SourceDirectoryPath",
+                                        "type": "Expression"
+                                    },
+                                    "dsFilePath": {
+                                        "value": "@pipeline().parameters.SourceFilePath",
+                                        "type": "Expression"
+                                    },
+                                    "lsGcpAccessKeyId": {
+                                        "value": "@pipeline().parameters.GcpAccessKeyId",
+                                        "type": "Expression"
+                                    },
+                                    "lsGcpSecretAccessKeySecretName": {
+                                        "value": "@pipeline().parameters.GcpSecretAccessKeySecretName",
+                                        "type": "Expression"
+                                    },
+                                    "lsAkvUrl": {
+                                        "value": "@pipeline().globalParameters.lsAkvUrl",
+                                        "type": "Expression"
+                                    }
+                                }
+                            }
+                        ],
+                        "outputs": [
+                            {
+                                "referenceName": "DS_ADLS_FILE",
+                                "type": "DatasetReference",
+                                "parameters": {
+                                    "dsContainerName": {
+                                        "value": "@pipeline().parameters.TargetContainerName",
+                                        "type": "Expression"
+                                    },
+                                    "dsDirectoryPath": {
+                                        "value": "@pipeline().parameters.TargetDirectoryPath",
+                                        "type": "Expression"
+                                    },
+                                    "dsFilePath": {
+                                        "value": "@pipeline().parameters.TargetFilePath",
+                                        "type": "Expression"
+                                    },
+                                    "lsAdlsUrl": {
+                                        "value": "@pipeline().globalParameters.lsAdlsUrl",
+                                        "type": "Expression"
+                                    },
+                                    "lsAdlsAccountKeySecretName": {
+                                        "value": "@pipeline().globalParameters.lsAdlsAccountKeySecretName",
+                                        "type": "Expression"
+                                    },
+                                    "lsAkvUrl": {
+                                        "value": "@pipeline().globalParameters.lsAkvUrl",
+                                        "type": "Expression"
+                                    }
+                                }
+                            }
+                        ]
+                    }
+                ],
+                "policy": {
+                    "elapsedTimeMetric": {}
+                },
+                "parameters": {
+                    "SourceBucketName": {
+                        "type": "string"
+                    },
+                    "TargetContainerName": {
+                        "type": "string"
+                    },
+                    "SourceDirectoryPath": {
+                        "type": "string"
+                    },
+                    "TargetDirectoryPath": {
+                        "type": "string"
+                    },
+                    "SourceFilePath": {
+                        "type": "string"
+                    },
+                    "TargetFilePath": {
+                        "type": "string"
+                    },
+                    "GcpAccessKeyId": {
+                        "type": "string"
+                    },
+                    "GcpSecretAccessKeySecretName": {
+                        "type": "string"
+                    }
+                },
+                "folder": {
+                    "name": "Components"
+                },
+                "annotations": [],
+                "lastPublishTime": "2024-12-01T15:39:14Z"
+            },
+            "dependsOn": [
+                "[concat(variables('factoryId'), '/datasets/DS_GCP_BUCKET_FILE')]",
+                "[concat(variables('factoryId'), '/datasets/DS_ADLS_FILE')]"
+            ]
+        },
+        {
+            "name": "[concat(parameters('factoryName'), '/LS_AKV')]",
+            "type": "Microsoft.DataFactory/factories/linkedServices",
+            "apiVersion": "2018-06-01",
+            "properties": {
+                "parameters": {
+                    "lsAkvUrl": {
+                        "type": "string"
+                    }
+                },
+                "annotations": [],
+                "type": "AzureKeyVault",
+                "typeProperties": {
+                    "baseUrl": "[parameters('LS_AKV_properties_typeProperties_baseUrl')]"
+                }
+            },
+            "dependsOn": []
+        },
+        {
+            "name": "[concat(parameters('factoryName'), '/LS_GCP_CLOUD_STORAGE')]",
+            "type": "Microsoft.DataFactory/factories/linkedServices",
+            "apiVersion": "2018-06-01",
+            "properties": {
+                "type": "GoogleCloudStorage",
+                "parameters": {
+                    "lsGcpAccessKeyId": {
+                        "type": "string"
+                    },
+                    "lsGcpSecretAccessKeySecretName": {
+                        "type": "string"
+                    },
+                    "lsAkvUrl": {
+                        "type": "string"
+                    }
+                },
+                "annotations": [],
+                "typeProperties": {
+                    "serviceUrl": "https://storage.googleapis.com",
+                    "accessKeyId": "[parameters('LS_GCP_CLOUD_STORAGE_properties_typeProperties_accessKeyId')]",
+                    "secretAccessKey": {
+                        "type": "AzureKeyVaultSecret",
+                        "store": {
+                            "referenceName": "LS_AKV",
+                            "type": "LinkedServiceReference",
+                            "parameters": {
+                                "lsAkvUrl": {
+                                    "value": "@linkedService().lsAkvUrl",
+                                    "type": "Expression"
+                                }
+                            }
+                        },
+                        "secretName": {
+                            "value": "@linkedService().lsGcpSecretAccessKeySecretName",
+                            "type": "Expression"
+                        }
+                    }
+                }
+            },
+            "dependsOn": [
+                "[concat(variables('factoryId'), '/linkedServices/LS_AKV')]"
+            ]
+        },
+        {
+            "name": "[concat(parameters('factoryName'), '/DS_GCP_BUCKET_FOLDER')]",
+            "type": "Microsoft.DataFactory/factories/datasets",
+            "apiVersion": "2018-06-01",
+            "properties": {
+                "linkedServiceName": {
+                    "referenceName": "LS_GCP_CLOUD_STORAGE",
+                    "type": "LinkedServiceReference",
+                    "parameters": {
+                        "lsGcpAccessKeyId": {
+                            "value": "@dataset().lsGcpAccessKeyId",
+                            "type": "Expression"
+                        },
+                        "lsGcpSecretAccessKeySecretName": {
+                            "value": "@dataset().lsGcpSecretAccessKeySecretName",
+                            "type": "Expression"
+                        },
+                        "lsAkvUrl": {
+                            "value": "@dataset().lsAkvUrl",
+                            "type": "Expression"
+                        }
+                    }
+                },
+                "parameters": {
+                    "dsBucketName": {
+                        "type": "string"
+                    },
+                    "dsDirectoryPath": {
+                        "type": "string"
+                    },
+                    "lsGcpAccessKeyId": {
+                        "type": "string"
+                    },
+                    "lsGcpSecretAccessKeySecretName": {
+                        "type": "string"
+                    },
+                    "lsAkvUrl": {
+                        "type": "string"
+                    }
+                },
+                "folder": {
+                    "name": "Components"
+                },
+                "annotations": [],
+                "type": "Binary",
+                "typeProperties": {
+                    "location": {
+                        "type": "GoogleCloudStorageLocation",
+                        "bucketName": {
+                            "value": "@dataset().dsBucketName",
+                            "type": "Expression"
+                        },
+                        "folderPath": {
+                            "value": "@dataset().dsDirectoryPath",
+                            "type": "Expression"
+                        }
+                    }
+                }
+            },
+            "dependsOn": [
+                "[concat(variables('factoryId'), '/linkedServices/LS_GCP_CLOUD_STORAGE')]"
+            ]
+        },
+        {
+            "name": "[concat(parameters('factoryName'), '/DS_ADLS_FOLDER')]",
+            "type": "Microsoft.DataFactory/factories/datasets",
+            "apiVersion": "2018-06-01",
+            "properties": {
+                "linkedServiceName": {
+                    "referenceName": "LS_ADLS",
+                    "type": "LinkedServiceReference",
+                    "parameters": {
+                        "lsAdlsUrl": {
+                            "value": "@dataset().lsAdlsUrl",
+                            "type": "Expression"
+                        },
+                        "lsAdlsAccountKeySecretName": {
+                            "value": "@dataset().lsAdlsAccountKeySecretName",
+                            "type": "Expression"
+                        },
+                        "lsAkvUrl": {
+                            "value": "@dataset().lsAkvUrl",
+                            "type": "Expression"
+                        }
+                    }
+                },
+                "parameters": {
+                    "dsContainerName": {
+                        "type": "string"
+                    },
+                    "dsDirectoryPath": {
+                        "type": "string"
+                    },
+                    "dsFilePath": {
+                        "type": "string"
+                    },
+                    "lsAdlsUrl": {
+                        "type": "string"
+                    },
+                    "lsAdlsAccountKeySecretName": {
+                        "type": "string"
+                    },
+                    "lsAkvUrl": {
+                        "type": "string"
+                    }
+                },
+                "folder": {
+                    "name": "Components"
+                },
+                "annotations": [],
+                "type": "Binary",
+                "typeProperties": {
+                    "location": {
+                        "type": "AzureBlobFSLocation",
+                        "fileName": {
+                            "value": "@dataset().dsFilePath",
+                            "type": "Expression"
+                        },
+                        "folderPath": {
+                            "value": "@dataset().dsDirectoryPath",
+                            "type": "Expression"
+                        },
+                        "fileSystem": {
+                            "value": "@dataset().dsContainerName",
+                            "type": "Expression"
+                        }
+                    }
+                }
+            },
+            "dependsOn": [
+                "[concat(variables('factoryId'), '/linkedServices/LS_ADLS')]"
+            ]
+        }
+    ]
+}

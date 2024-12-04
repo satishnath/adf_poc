@@ -1,0 +1,21 @@
+{
+    "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentParameters.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+        "factoryName": {
+            "value": "atium-sandbox-adf"
+        },
+        "LS_ADLS_TABLE_connectionString": {
+            "value": ""
+        },
+        "LS_ADLS_properties_typeProperties_url": {
+            "value": "@{linkedService().lsAdlsUrl}"
+        },
+        "LS_AKV_properties_typeProperties_baseUrl": {
+            "value": "@{linkedService().lsAkvUrl}"
+        },
+        "LS_GCP_CLOUD_STORAGE_properties_typeProperties_accessKeyId": {
+            "value": "@{linkedService().lsGcpAccessKeyId}"
+        }
+    }
+}

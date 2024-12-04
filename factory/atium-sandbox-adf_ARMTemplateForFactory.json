@@ -1,0 +1,64 @@
+{
+    "$schema": "http://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+        "factoryName": {
+            "type": "string",
+            "metadata": "Data Factory name",
+            "defaultValue": "atium-sandbox-adf"
+        },
+        "dataFactory_properties_globalParameters_lsAkvUrl_value": {
+            "type": "string",
+            "defaultValue": "PLACEHOLDER"
+        },
+        "dataFactory_properties_globalParameters_lsAdlsUrl_value": {
+            "type": "string",
+            "defaultValue": "PLACEHOLDER"
+        },
+        "dataFactory_properties_globalParameters_lsAdlsAccountKeySecretName_value": {
+            "type": "string",
+            "defaultValue": "PLACEHOLDER"
+        },
+        "dataFactory_location": {
+            "type": "string",
+            "defaultValue": "northeurope"
+        },
+        "dataFactory_identity_type": {
+            "type": "string",
+            "defaultValue": "SystemAssigned"
+        }
+    },
+    "variables": {
+        "factoryId": "[concat('Microsoft.DataFactory/factories/', parameters('factoryName'))]"
+    },
+    "resources": [
+        {
+            "name": "[parameters('factoryName')]",
+            "type": "Microsoft.DataFactory/factories",
+            "apiVersion": "2018-06-01",
+            "properties": {
+                "globalParameters": {
+                    "lsAkvUrl": {
+                        "type": "string",
+                        "value": "[parameters('dataFactory_properties_globalParameters_lsAkvUrl_value')]"
+                    },
+                    "lsAdlsUrl": {
+                        "type": "string",
+                        "value": "[parameters('dataFactory_properties_globalParameters_lsAdlsUrl_value')]"
+                    },
+                    "lsAdlsAccountKeySecretName": {
+                        "type": "string",
+                        "value": "[parameters('dataFactory_properties_globalParameters_lsAdlsAccountKeySecretName_value')]"
+                    }
+                }
+            },
+            "dependsOn": [],
+            "location": "[parameters('dataFactory_location')]",
+            "identity": {
+                "type": "[parameters('dataFactory_identity_type')]",
+                "principalId": "29da8695-4ea6-44a7-bf21-2d4c40ee24e2",
+                "tenantId": "45324217-1406-451e-b0ce-800c561d811a"
+            }
+        }
+    ]
+}
