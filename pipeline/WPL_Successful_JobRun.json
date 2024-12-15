@@ -1,0 +1,96 @@
+{
+	"name": "WPL_Successful_JobRun",
+	"properties": {
+		"activities": [
+			{
+				"name": "Successful JobRun",
+				"type": "Lookup",
+				"dependsOn": [],
+				"policy": {
+					"timeout": "0.12:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"source": {
+						"type": "AzureSqlSource",
+						"sqlReaderStoredProcedureName": "[metadata].[CompleteJobRun]",
+						"storedProcedureParameters": {
+							"JobRunId": {
+								"type": "Int64",
+								"value": {
+									"value": "@pipeline().parameters.wplJobRunId",
+									"type": "Expression"
+								}
+							},
+							"CompletedBy": {
+								"type": "String",
+								"value": {
+									"value": "@concat(\n    pipeline().DataFactory\n,   ' -- '\n,   coalesce(\n        pipeline()?.TriggeredByPipelineRunId\n    ,   pipeline().TriggerId\n    )\n)",
+									"type": "Expression"
+								}
+							},
+							"JobStatusId": {
+								"type": "Int64",
+								"value": "2"
+							}
+						},
+						"queryTimeout": "02:00:00",
+						"partitionOption": "None"
+					},
+					"dataset": {
+						"referenceName": "DS_GENERIC_ASQL_DB_TABLE",
+						"type": "DatasetReference",
+						"parameters": {
+							"lsAsqlDbConnectionStringSecretName": "METADATA-DB-CONN-STR"
+						}
+					}
+				}
+			},
+			{
+				"name": "Set returnValue",
+				"type": "SetVariable",
+				"dependsOn": [
+					{
+						"activity": "Successful JobRun",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"policy": {
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"variableName": "pipelineReturnValue",
+					"value": [
+						{
+							"key": "returnValue",
+							"value": {
+								"type": "Expression",
+								"content": "@activity('Successful JobRun').output.firstRow"
+							}
+						}
+					],
+					"setSystemVariable": true
+				}
+			}
+		],
+		"parameters": {
+			"wplJobRunId": {
+				"type": "int"
+			}
+		},
+		"folder": {
+			"name": "Components/_Generic/Loggers"
+		},
+		"annotations": [],
+		"lastPublishTime": "2024-04-18T07:57:21Z"
+	},
+	"type": "Microsoft.DataFactory/factories/pipelines"
+}
