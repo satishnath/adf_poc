@@ -1,0 +1,106 @@
+{
+	"name": "WPL_Update_SourceSystemEntity_Checkpoint",
+	"properties": {
+		"activities": [
+			{
+				"name": "Update SourceSystemEntity",
+				"type": "Lookup",
+				"dependsOn": [],
+				"policy": {
+					"timeout": "0.12:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"source": {
+						"type": "AzureSqlSource",
+						"sqlReaderStoredProcedureName": "[metadata].[UpdateSourceSystemTenantEntityCheckpoint]",
+						"storedProcedureParameters": {
+							"SourceSystemEntityId": {
+								"type": "Int64",
+								"value": {
+									"value": "@pipeline().parameters.wplSourceSystemEntityId",
+									"type": "Expression"
+								}
+							},
+							"SourceSystemTenantId": {
+								"type": "Int64",
+								"value": {
+									"value": "@pipeline().parameters.wplSourceSystemTenantId",
+									"type": "Expression"
+								}
+							},
+							"NewCheckpointDatetime": {
+								"type": "String",
+								"value": {
+									"value": "@pipeline().parameters.wplNewCheckpointDatetime",
+									"type": "Expression"
+								}
+							}
+						},
+						"queryTimeout": "02:00:00",
+						"partitionOption": "None"
+					},
+					"dataset": {
+						"referenceName": "DS_GENERIC_ASQL_DB_TABLE",
+						"type": "DatasetReference",
+						"parameters": {
+							"lsAsqlDbConnectionStringSecretName": "METADATA-DB-CONN-STR"
+						}
+					}
+				}
+			},
+			{
+				"name": "Set returnValue",
+				"type": "SetVariable",
+				"dependsOn": [
+					{
+						"activity": "Update SourceSystemEntity",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"policy": {
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"variableName": "pipelineReturnValue",
+					"value": [
+						{
+							"key": "returnValue",
+							"value": {
+								"type": "Expression",
+								"content": "@activity('Update SourceSystemEntity').output.firstRow"
+							}
+						}
+					],
+					"setSystemVariable": true
+				}
+			}
+		],
+		"parameters": {
+			"wplSourceSystemEntityId": {
+				"type": "int"
+			},
+			"wplNewCheckpointDatetime": {
+				"type": "string",
+				"defaultValue": "1900-01-01 00:00:00.0000000"
+			},
+			"wplSourceSystemTenantId": {
+				"type": "int"
+			}
+		},
+		"folder": {
+			"name": "x-vekonyt/_Generic/Helpers"
+		},
+		"annotations": [],
+		"lastPublishTime": "2024-04-18T07:57:21Z"
+	},
+	"type": "Microsoft.DataFactory/factories/pipelines"
+}
