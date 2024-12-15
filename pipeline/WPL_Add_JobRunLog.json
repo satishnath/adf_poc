@@ -1,0 +1,115 @@
+{
+	"name": "WPL_Add_JobRunLog",
+	"properties": {
+		"activities": [
+			{
+				"name": "Add JobRunLog",
+				"type": "Lookup",
+				"dependsOn": [],
+				"policy": {
+					"timeout": "0.12:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"source": {
+						"type": "AzureSqlSource",
+						"sqlReaderStoredProcedureName": "[metadata].[AddJobRunLog]",
+						"storedProcedureParameters": {
+							"JobRunId": {
+								"type": "Int64",
+								"value": {
+									"value": "@pipeline().parameters.wplJobRunId",
+									"type": "Expression"
+								}
+							},
+							"LogBy": {
+								"type": "String",
+								"value": {
+									"value": "@concat(\n    pipeline().DataFactory\n,   ' -- '\n,   coalesce(\n        pipeline().parameters.wplLogBy\n    ,   pipeline()?.TriggeredByPipelineRunId\n    ,   pipeline().TriggerId\n    )\n)",
+									"type": "Expression"
+								}
+							},
+							"LogType": {
+								"type": "String",
+								"value": {
+									"value": "@pipeline().parameters.wplLogType",
+									"type": "Expression"
+								}
+							},
+							"LogValue": {
+								"type": "String",
+								"value": {
+									"value": "@pipeline().parameters.wplLogValue",
+									"type": "Expression"
+								}
+							}
+						},
+						"queryTimeout": "02:00:00",
+						"partitionOption": "None"
+					},
+					"dataset": {
+						"referenceName": "DS_GENERIC_ASQL_DB_TABLE",
+						"type": "DatasetReference",
+						"parameters": {
+							"lsAsqlDbConnectionStringSecretName": "METADATA-DB-CONN-STR"
+						}
+					}
+				}
+			},
+			{
+				"name": "Set returnValue",
+				"type": "SetVariable",
+				"dependsOn": [
+					{
+						"activity": "Add JobRunLog",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"policy": {
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"variableName": "pipelineReturnValue",
+					"value": [
+						{
+							"key": "returnValue",
+							"value": {
+								"type": "Expression",
+								"content": "@activity('Add JobRunLog').output.firstRow"
+							}
+						}
+					],
+					"setSystemVariable": true
+				}
+			}
+		],
+		"parameters": {
+			"wplJobRunId": {
+				"type": "int"
+			},
+			"wplLogType": {
+				"type": "string"
+			},
+			"wplLogValue": {
+				"type": "string"
+			},
+			"wplLogBy": {
+				"type": "string"
+			}
+		},
+		"folder": {
+			"name": "Components/_Generic/Loggers"
+		},
+		"annotations": [],
+		"lastPublishTime": "2024-04-18T07:57:21Z"
+	},
+	"type": "Microsoft.DataFactory/factories/pipelines"
+}
