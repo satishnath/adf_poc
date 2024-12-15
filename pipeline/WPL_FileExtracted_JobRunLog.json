@@ -1,0 +1,55 @@
+{
+	"name": "WPL_FileExtracted_JobRunLog",
+	"properties": {
+		"activities": [
+			{
+				"name": "WPL_Add_JobRunLog",
+				"type": "ExecutePipeline",
+				"dependsOn": [],
+				"policy": {
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"pipeline": {
+						"referenceName": "WPL_Add_JobRunLog",
+						"type": "PipelineReference"
+					},
+					"waitOnCompletion": true,
+					"parameters": {
+						"wplJobRunId": {
+							"value": "@pipeline().parameters.wplJobRunId",
+							"type": "Expression"
+						},
+						"wplLogType": "DataExtraction",
+						"wplLogValue": {
+							"value": "@string(pipeline().parameters.wplFileDetailsJson)",
+							"type": "Expression"
+						},
+						"wplLogBy": {
+							"value": "@pipeline().parameters.wplLogBy",
+							"type": "Expression"
+						}
+					}
+				}
+			}
+		],
+		"parameters": {
+			"wplJobRunId": {
+				"type": "int"
+			},
+			"wplLogBy": {
+				"type": "string"
+			},
+			"wplFileDetailsJson": {
+				"type": "object"
+			}
+		},
+		"folder": {
+			"name": "Components/_Generic/Loggers"
+		},
+		"annotations": [],
+		"lastPublishTime": "2024-04-18T07:57:22Z"
+	},
+	"type": "Microsoft.DataFactory/factories/pipelines"
+}
