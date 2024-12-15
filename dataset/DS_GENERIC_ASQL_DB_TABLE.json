@@ -1,0 +1,15 @@
+{
+	"name": "DS_GENERIC_ASQL_DB_TABLE",
+	"properties": {
+		"linkedServiceName": {
+			"referenceName": "LS_GENERIC_ASQL_DB",
+			"type": "LinkedServiceReference"
+		},
+		"folder": {
+			"name": "Components/_Generic"
+		},
+		"annotations": [],
+		"type": "AzureSqlTable",
+		"schema": []
+	}
+}

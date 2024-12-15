@@ -12,7 +12,7 @@
 			}
 		},
 		"folder": {
-			"name": "Components"
+			"name": "Components/_Generic"
 		},
 		"annotations": [],
 		"type": "AzureTable",
