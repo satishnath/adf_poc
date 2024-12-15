@@ -3,7 +3,18 @@
 	"properties": {
 		"linkedServiceName": {
 			"referenceName": "LS_GENERIC_ASQL_DB",
-			"type": "LinkedServiceReference"
+			"type": "LinkedServiceReference",
+			"parameters": {
+				"lsAsqlDbConnectionStringSecretName": {
+					"value": "@dataset().lsAsqlDbConnectionStringSecretName",
+					"type": "Expression"
+				}
+			}
+		},
+		"parameters": {
+			"lsAsqlDbConnectionStringSecretName": {
+				"type": "string"
+			}
 		},
 		"folder": {
 			"name": "Components/_Generic"
