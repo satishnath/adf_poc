@@ -1,0 +1,245 @@
+{
+	"name": "WPL_Extractor_GcpBucket",
+	"properties": {
+		"activities": [
+			{
+				"name": "Lookup JobRun Details",
+				"type": "Lookup",
+				"dependsOn": [],
+				"policy": {
+					"timeout": "0.12:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"source": {
+						"type": "AzureSqlSource",
+						"sqlReaderQuery": {
+							"value": "@concat(\n    'SELECT\n        MIN(FORMAT(\n            COALESCE(\n                [InsertedDate],\n                ''1900-01-01 00:00:00.0000000''\n            )\n        ,   ''yyyy-MM-dd HH:mm:ss.fffffff''\n        ))  AS [JobStart]\n        FROM [metadata].[JobRun] WHERE [JobRunId] = '\n,   string(pipeline().parameters.wplJobRunId)\n)",
+							"type": "Expression"
+						},
+						"queryTimeout": "00:05:00",
+						"partitionOption": "None"
+					},
+					"dataset": {
+						"referenceName": "DS_GENERIC_ASQL_DB_TABLE",
+						"type": "DatasetReference",
+						"parameters": {
+							"lsAsqlDbConnectionStringSecretName": "METADATA-DB-CONN-STR"
+						}
+					}
+				}
+			},
+			{
+				"name": "Set Target Folder Path",
+				"type": "SetVariable",
+				"dependsOn": [],
+				"policy": {
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"variableName": "varTargetFolderPath",
+					"value": {
+						"value": "@concat(\n    json(pipeline().parameters.wplJobConfig.SourceSystemEntityParametersJson).Adls2FolderPath\n,   '/'\n,   formatDateTime(utcnow(), 'yyyy/MM/dd')\n,   concat(\n        '/JRID'\n    ,   string(pipeline().parameters.wplJobRunId)\n    )\n)",
+						"type": "Expression"
+					}
+				}
+			},
+			{
+				"name": "Check Extract Folder",
+				"type": "Validation",
+				"dependsOn": [
+					{
+						"activity": "Extract Data",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"userProperties": [],
+				"typeProperties": {
+					"timeout": "0.12:00:00",
+					"sleep": 10
+				}
+			},
+			{
+				"name": "If Files Were Extracted",
+				"type": "IfCondition",
+				"dependsOn": [
+					{
+						"activity": "Check Extract Folder",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"userProperties": [],
+				"typeProperties": {
+					"expression": {
+						"value": "@equals(\n    activity('Check Extract Folder').output.exists\n,   bool('true')\n)",
+						"type": "Expression"
+					},
+					"ifTrueActivities": [
+						{
+							"name": "Log File Extracted",
+							"type": "ExecutePipeline",
+							"dependsOn": [],
+							"policy": {
+								"secureInput": false
+							},
+							"userProperties": [],
+							"typeProperties": {
+								"pipeline": {
+									"referenceName": "WPL_FileExtracted_JobRunLog",
+									"type": "PipelineReference"
+								},
+								"waitOnCompletion": true,
+								"parameters": {
+									"wplJobRunId": {
+										"value": "@pipeline().parameters.wplJobRunId",
+										"type": "Expression"
+									},
+									"wplLogBy": {
+										"value": "@pipeline().Pipeline",
+										"type": "Expression"
+									},
+									"wplFileDetailsJson": {
+										"value": "@union(\n    union(\n        pipeline().parameters.wplJobConfig\n    ,   json(\n            concat(\n                '{\"SourceSystemEntityParametersJson\":'\n            ,   pipeline().parameters.wplJobConfig.SourceSystemEntityParametersJson\n            ,   '}'\n            )\n        )\n    )\n,   pipeline().parameters.wplEnvironmentConfig\n,   json(\n        concat(\n            '{\"IsFolder\":true,\"DatasetType\":\"PARQUET\",\"Location\":\"', variables('varTargetFolderPath'), '\"}'\n        )\n    )\n)",
+										"type": "Expression"
+									}
+								}
+							}
+						}
+					]
+				}
+			},
+			{
+				"name": "Extract Data",
+				"type": "Copy",
+				"dependsOn": [
+					{
+						"activity": "Set Target Folder Path",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					},
+					{
+						"activity": "Lookup JobRun Details",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"policy": {
+					"timeout": "0.12:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"source": {
+						"type": "BinarySource",
+						"storeSettings": {
+							"type": "GoogleCloudStorageReadSettings",
+							"recursive": false,
+							"modifiedDatetimeStart": {
+								"value": "@pipeline().parameters.wplJobConfig.CheckpointDatetime",
+								"type": "Expression"
+							},
+							"modifiedDatetimeEnd": {
+								"value": "@activity('Lookup JobRun Details').output.firstRow.JobStart",
+								"type": "Expression"
+							},
+							"wildcardFolderPath": {
+								"value": "@json(pipeline().parameters.wplJobConfig.SourceSystemEntityParametersJson).SourceGcpBucketDirectoryPath",
+								"type": "Expression"
+							},
+							"wildcardFileName": {
+								"value": "@json(pipeline().parameters.wplJobConfig.SourceSystemEntityParametersJson).SourceGcpBucketFilePath",
+								"type": "Expression"
+							},
+							"deleteFilesAfterCompletion": false
+						},
+						"formatSettings": {
+							"type": "BinaryReadSettings"
+						},
+						"bulkQueryPageSize": 100000
+					},
+					"sink": {
+						"type": "BinarySink",
+						"storeSettings": {
+							"type": "AzureBlobFSWriteSettings"
+						}
+					},
+					"enableStaging": false
+				},
+				"inputs": [
+					{
+						"referenceName": "DS_GCP_BUCKET_FOLDER",
+						"type": "DatasetReference",
+						"parameters": {
+							"dsBucketName": {
+								"value": "@json(pipeline().parameters.wplJobConfig.SourceSystemEntityParametersJson).SourceGcpBucketName",
+								"type": "Expression"
+							},
+							"dsDirectoryPath": {
+								"value": "@json(pipeline().parameters.wplJobConfig.SourceSystemEntityParametersJson).SourceGcpBucketDirectoryPath",
+								"type": "Expression"
+							},
+							"lsGcpAccessKeyId": {
+								"value": "@json(pipeline().parameters.wplJobConfig.SourceSystemEntityParametersJson).SourceGcpBucketAccessKeyId",
+								"type": "Expression"
+							},
+							"lsGcpSecretAccessKeySecretName": {
+								"value": "@json(pipeline().parameters.wplJobConfig.SourceSystemEntityParametersJson).SourceGcpBucketSecretAccessKeySecretName",
+								"type": "Expression"
+							},
+							"lsAkvUrl": {
+								"value": "@pipeline().globalParameters.lsAkvUrl",
+								"type": "Expression"
+							}
+						}
+					}
+				],
+				"outputs": [
+					{
+						"referenceName": "DS_ADLS_FOLDER",
+						"type": "DatasetReference"
+					}
+				]
+			}
+		],
+		"parameters": {
+			"wplEnvironmentConfig": {
+				"type": "object"
+			},
+			"wplJobConfig": {
+				"type": "object"
+			},
+			"wplJobRunId": {
+				"type": "int"
+			}
+		},
+		"variables": {
+			"varTargetFolderPath": {
+				"type": "String"
+			},
+			"varSalesforceObjectApiColumns": {
+				"type": "Array"
+			}
+		},
+		"folder": {
+			"name": "Components/_Generic/Extractors"
+		},
+		"annotations": [],
+		"lastPublishTime": "2024-12-12T09:21:22Z"
+	},
+	"type": "Microsoft.DataFactory/factories/pipelines"
+}

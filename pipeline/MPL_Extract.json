@@ -128,10 +128,10 @@
 								},
 								"cases": [
 									{
-										"value": "Salesforce_API",
+										"value": "GCP_Bucket",
 										"activities": [
 											{
-												"name": "Execute WPL_Extractor_SalesForce",
+												"name": "Execute WPL_Extractor_GcpBucket",
 												"type": "ExecutePipeline",
 												"dependsOn": [],
 												"policy": {
@@ -139,21 +139,7 @@
 												},
 												"userProperties": [],
 												"typeProperties": {
-													"waitOnCompletion": true,
-													"parameters": {
-														"wplEnvironmentConfig": {
-															"value": "@json(activity('Get Environment Config').output.firstRow.EnvironmentParametersJson)",
-															"type": "Expression"
-														},
-														"wplJobConfig": {
-															"value": "@item()",
-															"type": "Expression"
-														},
-														"wplJobRunId": {
-															"value": "@pipeline().parameters.mplJobRunId",
-															"type": "Expression"
-														}
-													}
+													"waitOnCompletion": true
 												}
 											}
 										]
