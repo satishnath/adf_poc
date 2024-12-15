@@ -139,7 +139,25 @@
 												},
 												"userProperties": [],
 												"typeProperties": {
-													"waitOnCompletion": true
+													"pipeline": {
+														"referenceName": "WPL_Extractor_GcpBucket",
+														"type": "PipelineReference"
+													},
+													"waitOnCompletion": true,
+													"parameters": {
+														"wplEnvironmentConfig": {
+															"value": "@json(activity('Get Environment Config').output.firstRow.EnvironmentParametersJson)",
+															"type": "Expression"
+														},
+														"wplJobConfig": {
+															"value": "@item()",
+															"type": "Expression"
+														},
+														"wplJobRunId": {
+															"value": "@pipeline().parameters.mplJobRunId",
+															"type": "Expression"
+														}
+													}
 												}
 											}
 										]
