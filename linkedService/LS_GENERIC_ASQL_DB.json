@@ -1,13 +1,14 @@
 {
 	"name": "LS_GENERIC_ASQL_DB",
+	"type": "Microsoft.DataFactory/factories/linkedservices",
 	"properties": {
-		"type": "AzureSqlDatabase",
 		"parameters": {
 			"lsAsqlDbConnectionStringSecretName": {
 				"type": "string"
 			}
 		},
 		"annotations": [],
+		"type": "AzureSqlDatabase",
 		"typeProperties": {
 			"connectionString": {
 				"type": "AzureKeyVaultSecret",
@@ -21,6 +22,5 @@
 				}
 			}
 		}
-	},
-	"type": "Microsoft.DataFactory/factories/linkedservices"
+	}
 }
