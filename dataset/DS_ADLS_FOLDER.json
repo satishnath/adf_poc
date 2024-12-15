@@ -26,9 +26,6 @@
 			"dsDirectoryPath": {
 				"type": "string"
 			},
-			"dsFilePath": {
-				"type": "string"
-			},
 			"lsAdlsUrl": {
 				"type": "string"
 			},
@@ -47,10 +44,6 @@
 		"typeProperties": {
 			"location": {
 				"type": "AzureBlobFSLocation",
-				"fileName": {
-					"value": "@dataset().dsFilePath",
-					"type": "Expression"
-				},
 				"folderPath": {
 					"value": "@dataset().dsDirectoryPath",
 					"type": "Expression"
