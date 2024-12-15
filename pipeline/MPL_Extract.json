@@ -1,0 +1,273 @@
+{
+	"name": "MPL_Extract",
+	"properties": {
+		"activities": [
+			{
+				"name": "Get Job Config",
+				"type": "Lookup",
+				"dependsOn": [],
+				"policy": {
+					"timeout": "0.12:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"source": {
+						"type": "AzureSqlSource",
+						"sqlReaderStoredProcedureName": {
+							"value": "@pipeline().parameters.mplGetJobConfigSproc",
+							"type": "Expression"
+						},
+						"storedProcedureParameters": {
+							"JobName": {
+								"type": "String",
+								"value": {
+									"value": "@pipeline().parameters.mplJobName",
+									"type": "Expression"
+								}
+							},
+							"EnvironmentName": {
+								"type": "String",
+								"value": {
+									"value": "@pipeline().parameters.mplEnvironment",
+									"type": "Expression"
+								}
+							}
+						},
+						"queryTimeout": "02:00:00",
+						"partitionOption": "None"
+					},
+					"dataset": {
+						"referenceName": "DS_GENERIC_ASQL_DB_TABLE",
+						"type": "DatasetReference",
+						"parameters": {
+							"lsAsqlDbConnectionStringSecretName": "METADATA-DB-CONN-STR"
+						}
+					},
+					"firstRowOnly": false
+				}
+			},
+			{
+				"name": "Get Environment Config",
+				"type": "Lookup",
+				"dependsOn": [],
+				"policy": {
+					"timeout": "0.12:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"source": {
+						"type": "AzureSqlSource",
+						"sqlReaderStoredProcedureName": {
+							"value": "@pipeline().parameters.mplGetEnvironmentConfigSproc",
+							"type": "Expression"
+						},
+						"storedProcedureParameters": {
+							"EnvironmentName": {
+								"type": "String",
+								"value": {
+									"value": "@pipeline().parameters.mplEnvironment",
+									"type": "Expression"
+								}
+							}
+						},
+						"queryTimeout": "02:00:00",
+						"partitionOption": "None"
+					},
+					"dataset": {
+						"referenceName": "DS_GENERIC_ASQL_DB_TABLE",
+						"type": "DatasetReference",
+						"parameters": {
+							"lsAsqlDbConnectionStringSecretName": "METADATA-DB-CONN-STR"
+						}
+					},
+					"firstRowOnly": true
+				}
+			},
+			{
+				"name": "For Each Metadata Record",
+				"type": "ForEach",
+				"dependsOn": [
+					{
+						"activity": "Get Environment Config",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					},
+					{
+						"activity": "Get Job Config",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"userProperties": [],
+				"typeProperties": {
+					"items": {
+						"value": "@activity('Get Job Config').output.value",
+						"type": "Expression"
+					},
+					"isSequential": false,
+					"activities": [
+						{
+							"name": "Start Extractor",
+							"type": "Switch",
+							"dependsOn": [],
+							"userProperties": [],
+							"typeProperties": {
+								"on": {
+									"value": "@json(item().SourceSystemEntityParametersJson).sourceType",
+									"type": "Expression"
+								},
+								"cases": [
+									{
+										"value": "Salesforce_API",
+										"activities": [
+											{
+												"name": "Execute WPL_Extractor_SalesForce",
+												"type": "ExecutePipeline",
+												"dependsOn": [],
+												"policy": {
+													"secureInput": false
+												},
+												"userProperties": [],
+												"typeProperties": {
+													"waitOnCompletion": true,
+													"parameters": {
+														"wplEnvironmentConfig": {
+															"value": "@json(activity('Get Environment Config').output.firstRow.EnvironmentParametersJson)",
+															"type": "Expression"
+														},
+														"wplJobConfig": {
+															"value": "@item()",
+															"type": "Expression"
+														},
+														"wplJobRunId": {
+															"value": "@pipeline().parameters.mplJobRunId",
+															"type": "Expression"
+														}
+													}
+												}
+											}
+										]
+									}
+								]
+							}
+						},
+						{
+							"name": "Lookup JobRun Details",
+							"type": "Lookup",
+							"dependsOn": [],
+							"policy": {
+								"timeout": "0.12:00:00",
+								"retry": 0,
+								"retryIntervalInSeconds": 30,
+								"secureOutput": false,
+								"secureInput": false
+							},
+							"userProperties": [],
+							"typeProperties": {
+								"source": {
+									"type": "AzureSqlSource",
+									"sqlReaderQuery": {
+										"value": "@concat(\n    'SELECT\n        MIN(FORMAT(\n            COALESCE(\n                [InsertedDate],\n                ''1900-01-01 00:00:00.0000000''\n            )\n        ,   ''yyyy-MM-dd HH:mm:ss.fffffff''\n        ))  AS [JobStart]\n        FROM [metadata].[JobRun] WHERE [JobRunId] = '\n,   string(pipeline().parameters.mplJobRunId)\n)",
+										"type": "Expression"
+									},
+									"queryTimeout": "00:05:00",
+									"partitionOption": "None"
+								},
+								"dataset": {
+									"referenceName": "DS_GENERIC_ASQL_DB_TABLE",
+									"type": "DatasetReference",
+									"parameters": {
+										"lsAsqlDbConnectionStringSecretName": "METADATA-DB-CONN-STR"
+									}
+								}
+							}
+						},
+						{
+							"name": "Update Checkpoint",
+							"type": "ExecutePipeline",
+							"dependsOn": [
+								{
+									"activity": "Start Extractor",
+									"dependencyConditions": [
+										"Succeeded"
+									]
+								},
+								{
+									"activity": "Lookup JobRun Details",
+									"dependencyConditions": [
+										"Succeeded"
+									]
+								}
+							],
+							"policy": {
+								"secureInput": false
+							},
+							"userProperties": [],
+							"typeProperties": {
+								"pipeline": {
+									"referenceName": "WPL_Update_SourceSystemEntity_Checkpoint",
+									"type": "PipelineReference"
+								},
+								"waitOnCompletion": true,
+								"parameters": {
+									"wplSourceSystemEntityId": {
+										"value": "@item().SourceSystemEntityId",
+										"type": "Expression"
+									},
+									"wplNewCheckpointDatetime": {
+										"value": "@activity('Lookup JobRun Details').output.firstRow.JobStart",
+										"type": "Expression"
+									},
+									"wplSourceSystemTenantId": {
+										"value": "@item().SourceSystemTenantId",
+										"type": "Expression"
+									}
+								}
+							}
+						}
+					]
+				}
+			}
+		],
+		"parameters": {
+			"mplGetEnvironmentConfigSproc": {
+				"type": "string",
+				"defaultValue": "[metadata].[GetEnvironmentConfig]"
+			},
+			"mplEnvironment": {
+				"type": "string"
+			},
+			"mplGetJobConfigSproc": {
+				"type": "string",
+				"defaultValue": "[metadata].[GetJobConfig]"
+			},
+			"mplJobName": {
+				"type": "string"
+			},
+			"mplJobRunId": {
+				"type": "string"
+			}
+		},
+		"variables": {
+			"varTargetFolderPath": {
+				"type": "String"
+			}
+		},
+		"folder": {
+			"name": "Components/_Generic"
+		},
+		"annotations": [],
+		"lastPublishTime": "2024-12-12T09:21:22Z"
+	},
+	"type": "Microsoft.DataFactory/factories/pipelines"
+}
